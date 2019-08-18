@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Исходные файлы\internal">
+      <UniqueIdentifier>{decd83ba-1865-4cd4-9563-54922e701402}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\internal">
+      <UniqueIdentifier>{286b4a5a-7bbf-47ab-9336-6bbbb278b661}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -27,6 +33,12 @@
     <ClInclude Include="AssDialogString.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Parentheses.h">
+      <Filter>Файлы заголовков\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>Файлы заголовков\internal</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -37,6 +49,9 @@
     </ClCompile>
     <ClCompile Include="AssDialogString.cpp">
       <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Parentheses.cpp">
+      <Filter>Исходные файлы\internal</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

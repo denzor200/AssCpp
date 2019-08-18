@@ -5,6 +5,7 @@
 
 class AssDialogString
 {
+public:
 	struct SegmentParams
 	{
 		unsigned Bold = 0;
@@ -20,6 +21,8 @@ class AssDialogString
 
 		Segment() = default;
 	};
+
+private:
 	using SegmentsType = std::vector<Segment>;
 	using RSegmentsType = SegmentsType & ;
 	using CRSegmentsType = const SegmentsType&;
@@ -36,7 +39,7 @@ public:
 	std::string Print() const;
 
 private:
-	void ParseTo(SegmentsType& Out, const char* Value);
+	static void ParseTo(SegmentsType& Out, std::string Value);
 };
 
 
