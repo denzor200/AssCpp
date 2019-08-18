@@ -53,5 +53,8 @@
     <ClCompile Include="Parentheses.cpp">
       <Filter>Исходные файлы\internal</Filter>
     </ClCompile>
+    <ClCompile Include="readFile.cpp">
+      <Filter>Исходные файлы\internal</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

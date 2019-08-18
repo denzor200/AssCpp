@@ -4,6 +4,8 @@
 #include <vector>
 #include <unordered_map>
 
+#include "AssDialogString.h"
+
 namespace ASS {
 
 	// Время в ass имеет свои нюансы
@@ -215,11 +217,21 @@ namespace ASS {
 		}
 	};
 
+	// TODO: вывести в текст ошибок имена файлов
 	class AssScriptIsNotTextFile : public AssScriptException
 	{
 	public:
 		AssScriptIsNotTextFile() noexcept :
 			AssScriptException("Can't parse ass script because it's not a text file")
+		{
+		}
+	};
+
+	class AssScriptCantFindScriptInfo : public AssScriptException
+	{
+	public:
+		AssScriptCantFindScriptInfo() noexcept :
+			AssScriptException("Can't find 'Script Info' section in ass script")
 		{
 		}
 	};
@@ -241,11 +253,24 @@ namespace ASS {
 
 		using RefAssSectionGraphics = AssSectionGraphics & ;
 		using CRefAssSectionGraphics = const AssSectionGraphics&;
+
 	private:
+		struct AssImpl 
+		{
+			AssSectionScriptInfo ScriptInfo;
+			AssSectionV4Styles V4Styles;
+			AssSectionEvents Events;
+			AssSectionFonts Fonts;
+			AssSectionGraphics Graphics;
+
+			AssImpl() = default;
+		};
+		AssImpl m_Impl;
 
 	public:
 		AssScript() = default;
-		AssScript(const char* FileName);
+		AssScript(const std::string& FileName);
+		AssScript(std::stringstream& ss);
 		~AssScript();
 
 		RefAssSectionScriptInfo		ScriptInfo();
@@ -263,12 +288,62 @@ namespace ASS {
 		RefAssSectionGraphics		Graphics();
 		CRefAssSectionGraphics		Graphics() const;
 
-		void Parse(const char* FileName);
+		void Parse(std::stringstream& ss);
 		std::string Print() const;
 
-		void Read(const char* FileName);
-		void Write(const char* FileName) const;
+		void Read(const std::string& FileName);
+		void Write(const std::string& FileName) const;
 
+	private:
+		void ParseTo(AssImpl& Impl, std::stringstream& ss);
 	};
 };
 
+
+namespace ASS
+{
+	inline AssScript::RefAssSectionScriptInfo	AssScript::ScriptInfo()
+	{
+		return m_Impl.ScriptInfo;
+	}
+	inline AssScript::CRefAssSectionScriptInfo	AssScript::ScriptInfo() const
+	{
+		return m_Impl.ScriptInfo;
+	}
+
+	inline AssScript::RefAssSectionV4Styles		AssScript::V4Styles()
+	{
+		return m_Impl.V4Styles;
+	}
+	inline AssScript::CRefAssSectionV4Styles	AssScript::V4Styles() const
+	{
+		return m_Impl.V4Styles;
+	}
+
+	inline AssScript::RefAssSectionEvents		AssScript::Events()
+	{
+		return m_Impl.Events;
+	}
+	inline AssScript::CRefAssSectionEvents		AssScript::Events() const
+	{
+		return m_Impl.Events;
+	}
+
+	inline AssScript::RefAssSectionFonts		AssScript::Fonts()
+	{
+		return m_Impl.Fonts;
+	}
+	inline AssScript::CRefAssSectionFonts		AssScript::Fonts() const
+	{
+		return m_Impl.Fonts;
+	}
+
+	inline AssScript::RefAssSectionGraphics		AssScript::Graphics()
+	{
+		return m_Impl.Graphics;
+	}
+	inline AssScript::CRefAssSectionGraphics	AssScript::Graphics() const
+	{
+		return m_Impl.Graphics;
+	}
+};
