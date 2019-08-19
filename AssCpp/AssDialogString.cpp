@@ -3,9 +3,6 @@
 #include "Parentheses.h"
 #include <regex>
 
-#define DISABLE_ICU
-#include "Utils.h"
-
 #include <iostream>
 
 // for "unsigned" flags

@@ -1,8 +1,7 @@
 #pragma once
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <vector>
-#include <unordered_map>
+#include <bitset>
 
 #include "AssDialogString.h"
 
@@ -20,13 +19,14 @@ namespace ASS {
 		enum class AssEventType
 		{
 			UNKNOWN = 0,
-			Dialogue,
-			Comment,
-			Picture,
-			Sound,
-			Movie,
-			Command
+			Dialogue	= 1,
+			Comment		= 2,
+			Picture		= 3,
+			Sound		= 4,
+			Movie		= 5,
+			Command		= 6
 		};
+		static const uint32_t EVENTS_COUNT = 6;
 		AssEventType	Type = AssEventType::UNKNOWN; 
 		bool			Marked = false;
 		AssTime			Start;
@@ -167,31 +167,17 @@ namespace ASS {
 		using CRefSubSection = const SubSection &;
 
 	private:
-
+		SubSection m_Events;
 	public:
 		RefSubSection		AllEvents();
 		CRefSubSection		AllEvents() const;
 
 		template <typename T>
-		void EnumerateAllEvents(T Func);
+		void EnumerateEvents(T Func, std::bitset<AssEvent::EVENTS_COUNT> Flags);
 
 		template <typename T>
-		void EnumerateDialogs(T Func);
+		void EnumerateEvents(T Func);
 
-		template <typename T>
-		void EnumerateComments(T Func);
-
-		template <typename T>
-		void EnumeratePictures(T Func);
-
-		template <typename T>
-		void EnumerateMovies(T Func);
-
-		template <typename T>
-		void EnumerateSounds(T Func);
-
-		template <typename T>
-		void EnumerateCommands(T Func);
 	};
 
 	// Пока не поддерживается..
@@ -346,4 +332,32 @@ namespace ASS
 	{
 		return m_Impl.Graphics;
 	}
+
+	inline AssSectionEvents::RefSubSection		AssSectionEvents::AllEvents()
+	{
+		return m_Events;
+	}
+	inline AssSectionEvents::CRefSubSection		AssSectionEvents::AllEvents() const
+	{
+		return m_Events;
+	}
+
+
+	template <typename T>
+	void AssSectionEvents::EnumerateEvents(T Func, std::bitset<AssEvent::EVENTS_COUNT> Flags)
+	{
+		for (auto Value : m_Events)
+		{
+			assert(Value.Type != AssEventType::UNKNOWN);
+			if (Flags.test(Value.Type-1))
+				Func(Value);
+		}
+	}
+
+	template <typename T>
+	void AssSectionEvents::EnumerateEvents(T Func)
+	{
+		EnumerateEvents(Func, std::bitset<AssEvent::EVENTS_COUNT>().set());
+	}
+
 };

@@ -2,9 +2,6 @@
 #include "AssScript.h"
 #include <sstream>
 
-#define DISABLE_ICU
-#include "Utils.h"
-
 #include <boost\optional.hpp>
 
 using namespace ASS;
@@ -26,26 +23,26 @@ namespace AssScriptUtils
 		}
 		return {};
 	}
+	static bool IsSectionName(const std::string& Value)
+	{
+		
+	}
 
-	static void ParseScriptInfo(AssSectionScriptInfo& SI, std::stringstream& ss)
+
+	static boost::optional<std::string> ParseScriptInfo(AssSectionScriptInfo& SI, std::stringstream& ss)
 	{
 		
+		return {};
 	}
-	static void ParseV4Styles(AssSectionV4Styles& V4S, std::stringstream& ss)
+	static boost::optional<std::string> ParseV4Styles(AssSectionV4Styles& V4S, std::stringstream& ss)
 	{
 		
+		return {};
 	}
-	static void ParseEvents(AssSectionEvents& E, std::stringstream& ss)
+	static boost::optional<std::string> ParseEvents(AssSectionEvents& E, std::stringstream& ss)
 	{
 		
-	}
-	static void ParseFonts(AssSectionFonts& F, std::stringstream& ss)
-	{
-		
-	}
-	static void ParseGraphics(AssSectionGraphics& G, std::stringstream& ss)
-	{
-		
+		return {};
 	}
 };
 
@@ -100,18 +97,18 @@ void AssScript::ParseTo(AssImpl& Impl, std::stringstream& ss)
 	LineStr = AssScriptUtils::ScrollToNonempty(ss);
 	if (!LineStr || LineStr.get() != SCRIPT_INFO_SECTION)
 		throw AssScriptCantFindScriptInfo();
-	AssScriptUtils::ParseScriptInfo(Impl.ScriptInfo, ss);
+	LineStr = AssScriptUtils::ParseScriptInfo(Impl.ScriptInfo, ss);
 
 	// Проходим по остальным секциям
 	// Тут порядок не важен
 	// TODO: Разделены ли секции между собой пробелами?? Гарантирует ли это стандарт?
-	while (LineStr = AssScriptUtils::ScrollToNonempty(ss))
+	while (LineStr)
 	{
 		if (LineStr.get() == V4PLUS_STYLES_SECTION)
-			AssScriptUtils::ParseV4Styles(Impl.V4Styles, ss);
+			LineStr = AssScriptUtils::ParseV4Styles(Impl.V4Styles, ss);
 		else if (LineStr.get() == EVENTS_SECTION)
 		{
-			AssScriptUtils::ParseEvents(Impl.Events, ss);
+			LineStr = AssScriptUtils::ParseEvents(Impl.Events, ss);
 		}
 	}
 }

@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "Parentheses.h"
-#include "Utils.h"
 
 // Изменять содержимое StrInout разрешается только если НЕ установлен соответствующий флаг (P.ForbidModifyInoutString)
 template <typename IS_BEGIN_FUNC, typename IS_END_FUNC>
