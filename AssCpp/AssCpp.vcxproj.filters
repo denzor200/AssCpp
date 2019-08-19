@@ -39,6 +39,9 @@
     <ClInclude Include="Utils.h">
       <Filter>Файлы заголовков\internal</Filter>
     </ClInclude>
+    <ClInclude Include="EncodingUtils.h">
+      <Filter>Файлы заголовков\internal</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -53,7 +56,7 @@
     <ClCompile Include="Parentheses.cpp">
       <Filter>Исходные файлы\internal</Filter>
     </ClCompile>
-    <ClCompile Include="readFile.cpp">
+    <ClCompile Include="EncodingUtils.cpp">
       <Filter>Исходные файлы\internal</Filter>
     </ClCompile>
   </ItemGroup>

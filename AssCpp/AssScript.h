@@ -254,9 +254,9 @@ namespace ASS {
 		AssImpl m_Impl;
 
 	public:
-		AssScript() = default;
+		//AssScript() = default;
 		AssScript(const std::string& FileName);
-		AssScript(std::stringstream& ss);
+		//AssScript(std::stringstream& ss);
 		~AssScript();
 
 		RefAssSectionScriptInfo		ScriptInfo();
@@ -274,14 +274,14 @@ namespace ASS {
 		RefAssSectionGraphics		Graphics();
 		CRefAssSectionGraphics		Graphics() const;
 
-		void Parse(std::stringstream& ss);
+		void Parse(std::istream& ss);
 		std::string Print() const;
 
 		void Read(const std::string& FileName);
 		void Write(const std::string& FileName) const;
 
 	private:
-		void ParseTo(AssImpl& Impl, std::stringstream& ss);
+		void ParseTo(AssImpl& Impl, std::istream& ss);
 	};
 };
 
