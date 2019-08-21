@@ -3,6 +3,8 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <bitset>
 
+#include <boost\optional.hpp>
+
 #include "AssDialogString.h"
 
 namespace ASS {
@@ -27,19 +29,20 @@ namespace ASS {
 			Command		= 6
 		};
 		static const uint32_t EVENTS_COUNT = 6;
-		AssEventType	Type = AssEventType::UNKNOWN; 
-		bool			Marked = false;
+		AssEventType	Type = AssEventType::UNKNOWN; // not initialized
+		int				Layer;
 		AssTime			Start;
 		AssTime			End;
 		std::string		Style;
 		std::string		Name;
-		uint32_t		MarginL = 0;
-		uint32_t		MarginR = 0;
-		uint32_t		MarginV = 0 ;
+		uint32_t		MarginL;
+		uint32_t		MarginR;
+		uint32_t		MarginV;
 		std::string		Effect;
 		std::string		Text;
 
 		AssEvent() = default;
+
 	};
 
 	struct AssStyle
@@ -100,8 +103,9 @@ namespace ASS {
 	};
 
 	// Header
-	struct AssSectionScriptInfo
+	class AssSectionScriptInfo
 	{
+	public:
 		enum class ScriptType
 		{
 			UNKNOWN = 0,
@@ -121,17 +125,42 @@ namespace ASS {
 		};
 
 		// Строки, влияющие на работоспособность и правильность отображения субитров
-		ScriptType ScriptType = ScriptType::UNKNOWN;
-		Collisions Collisions = Collisions::Normal; // TODO: выясни значение по умолчанию
-		uint32_t PlayResX = 0;
-		uint32_t PlayResY = 0;
-		uint32_t PlayDepth = 0;
-		double Timer = 100.0000; // Должно содержать 4 знака после запятой
-		WrapStyle WrapStyle = WrapStyle::ZERO; // TODO: выясни значение по умолчанию
+	private:
+		ScriptType m_ScriptType = ScriptType::UNKNOWN; // not initialized
+		boost::optional<Collisions> m_Collisions;
+		boost::optional<uint32_t>	m_PlayResX;
+		boost::optional<uint32_t>	m_PlayResY;
+		boost::optional<uint32_t>	m_PlayDepth;
+		boost::optional<double>		m_Timer; // Должно содержать 4 знака после запятой
+		boost::optional<WrapStyle>	m_WrapStyle;
+
+	public:
+		AssSectionScriptInfo() = default;
+		
+		ScriptType GetScriptType() const;
+		void SetScriptType(ScriptType Value);
+
+		Collisions GetCollisions() const;
+		void SetCollisions(Collisions Value);
+
+		uint32_t GetPlayResX() const;
+		void SetPlayResX(uint32_t Value);
+
+		uint32_t GetPlayResY() const;
+		void SetPlayResY(uint32_t Value);
+
+		uint32_t GetPlayDepth() const;
+		void SetPlayDepth(uint32_t Value);
+
+		double GetTimer() const;
+		void SetTimer(double Value);
+
+		WrapStyle GetWrapStyle() const;
+		void SetWrapStyle(WrapStyle Value);
+
+	public:
 
 		// Необязательные строки, не влияющие на работоспособность скрипта
-		// TODO: нужно как-то отслежтивать факт наличия необязательной строки
-		// Чтобы они потом не шли в выходной файл мусором
 		std::string Title;
 		std::string OriginalScript;
 		std::string OriginalTranslation;
@@ -141,7 +170,10 @@ namespace ASS {
 		std::string ScriptUpdatedBy;
 		std::string UpdateDetails;
 
-		AssSectionScriptInfo() = default;
+	private:
+		friend class AssScript;
+		void Read(std::istream& Stream);
+		void Write(std::ostream& Stream) const;
 	};
 
 	class AssSectionV4Styles
@@ -152,11 +184,15 @@ namespace ASS {
 		using CRefSubSection = const SubSection &;
 
 	private:
-
+		SubSection			m_Styles;
 	public:
 		RefSubSection		AllStyles();
 		CRefSubSection		AllStyles() const;
 
+	private:
+		friend class AssScript;
+		void Read(std::istream& Stream);
+		void Write(std::ostream& Stream) const;
 	};
 
 	class AssSectionEvents
@@ -178,6 +214,10 @@ namespace ASS {
 		template <typename T>
 		void EnumerateEvents(T Func);
 
+	private:
+		friend class AssScript;
+		void Read(std::istream& Stream);
+		void Write(std::ostream& Stream) const;
 	};
 
 	// Пока не поддерживается..
@@ -256,7 +296,7 @@ namespace ASS {
 	public:
 		//AssScript() = default;
 		AssScript(const std::string& FileName);
-		//AssScript(std::stringstream& ss);
+		//AssScript(std::stringstream& Stream);
 		~AssScript();
 
 		RefAssSectionScriptInfo		ScriptInfo();
@@ -274,14 +314,15 @@ namespace ASS {
 		RefAssSectionGraphics		Graphics();
 		CRefAssSectionGraphics		Graphics() const;
 
-		void Parse(std::istream& ss);
+		void Parse(std::istream& Stream);
 		std::string Print() const;
 
 		void Read(const std::string& FileName);
 		void Write(const std::string& FileName) const;
 
 	private:
-		void ParseTo(AssImpl& Impl, std::istream& ss);
+		void ParseTo(AssImpl& Impl, std::istream& Stream);
+		void Write(std::ostream& Stream) const;
 	};
 };
 
