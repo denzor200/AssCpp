@@ -154,6 +154,7 @@
   <ItemGroup>
     <ClInclude Include="AssDialogString.h" />
     <ClInclude Include="AssScript.h" />
+    <ClInclude Include="AssTime.h" />
     <ClInclude Include="EncodingUtils.h" />
     <ClInclude Include="Parentheses.h" />
     <ClInclude Include="stdafx.h" />
@@ -163,6 +164,7 @@
   <ItemGroup>
     <ClCompile Include="AssDialogString.cpp" />
     <ClCompile Include="AssScript.cpp" />
+    <ClCompile Include="AssTime.cpp" />
     <ClCompile Include="EncodingUtils.cpp" />
     <ClCompile Include="Parentheses.cpp" />
     <ClCompile Include="stdafx.cpp">
