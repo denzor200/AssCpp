@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include "AssTime.h"
 #include <bitset>
 
 #include <boost\optional.hpp>
@@ -8,13 +8,6 @@
 #include "AssDialogString.h"
 
 namespace ASS {
-
-	// Время в ass имеет свои нюансы
-	// 1. Час должен содержать не более одной цифры
-	// 2. Милисекунды имеют точность 1/100 секунды
-	// Возможно по этим причинам стоит реализовать свой класс времени
-	using AssTime = boost::posix_time::ptime;
-
 	// TODO: некоторые стороковые поля возможно следует заменить ссылками на объекты
 	struct AssEvent
 	{
@@ -232,34 +225,6 @@ namespace ASS {
 	{
 	public:
 
-	};
-
-	// TODO: Подбери другой базовый класс. Не факт, что стоит наследоваться от std::exception
-	class AssScriptException : public std::exception
-	{
-	protected:
-		AssScriptException(const char* Msg) noexcept : std::exception(Msg)
-		{
-		}
-	};
-
-	// TODO: вывести в текст ошибок имена файлов
-	class AssScriptIsNotTextFile : public AssScriptException
-	{
-	public:
-		AssScriptIsNotTextFile() noexcept :
-			AssScriptException("Can't parse ass script because it's not a text file")
-		{
-		}
-	};
-
-	class AssScriptCantFindScriptInfo : public AssScriptException
-	{
-	public:
-		AssScriptCantFindScriptInfo() noexcept :
-			AssScriptException("Can't find 'Script Info' section in ass script")
-		{
-		}
 	};
 
 	class AssScript

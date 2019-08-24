@@ -2,8 +2,11 @@
 #include "AssScript.h"
 #include "EncodingUtils.h"
 #include <fstream>
+#include <iostream>
 
 #include <boost/optional/optional_io.hpp>
+
+#include "AssErrors.h"
 
 using namespace ASS;
 
@@ -120,11 +123,6 @@ namespace AssScriptUtils
 		return "";
 	}
 
-	static std::string PrintAssEventTime(AssTime tm)
-	{
-		// TODO: implement this
-		return "";
-	}
 };
 
 namespace AssSerialize
@@ -141,8 +139,8 @@ namespace AssSerialize
 	{
 		Stream << AssScriptUtils::PrintAssEventType(E.Type)
 			<< ": " << E.Layer
-			<< "," << AssScriptUtils::PrintAssEventTime(E.Start)
-			<< "," << AssScriptUtils::PrintAssEventTime(E.End)
+			<< "," << E.Start.Print()
+			<< "," << E.End.Print()
 			<< "," << E.Style
 			<< "," << E.Name
 			<< "," << E.MarginL

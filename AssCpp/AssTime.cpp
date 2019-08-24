@@ -3,6 +3,8 @@
 #include <iomanip>
 #include <sstream>
 
+#include "AssErrors.h"
+
 using namespace ASS;
 
 #define CHECK_TIME_VALUE(TYPE, VALUE, MAX) \
