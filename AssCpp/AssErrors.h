@@ -39,6 +39,14 @@ namespace ASS
 		}
 	};
 
+	class AssScriptInvalidScriptType : public AssException
+	{
+	public:
+		AssScriptInvalidScriptType() noexcept :
+			AssException("The value of 'ScriptType' field is not expected. Supported only 'v4.00+' now")
+		{
+		}
+	};
 
 
 	/*******************************

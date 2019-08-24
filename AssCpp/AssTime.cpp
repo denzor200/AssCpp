@@ -129,7 +129,8 @@ void AssTime::Parse(const std::string& Value)
 	if (xResults.size() < 3)
 		throw AssTimeInvalidString();
 
-	try {
+	bool Status = false;
+	Utils::StoiPassAllEceptionsWrapper([this, &Status, &xResults]() {
 		AssTime TempTime;
 		TempTime.SetHours(std::stoi(xResults[0]));
 		TempTime.SetMinutes(std::stoi(xResults[1]));
@@ -138,15 +139,12 @@ void AssTime::Parse(const std::string& Value)
 		if (xResults.size() >= 4)
 			TempTime.SetMiliseconds(StringToMiliseconds(xResults[3]));
 
-		std::swap(*this,TempTime);
-		return; // all right
-	}
-	// only for std::stoi
-	catch (const std::invalid_argument&)
-	{
-	}
-
-	throw AssTimeInvalidString();
+		std::swap(*this, TempTime);
+		Status = true;
+	});
+	
+	if (!Status)
+		throw AssTimeInvalidString();
 }
 
 std::string AssTime::Print(WriteParams Params) const

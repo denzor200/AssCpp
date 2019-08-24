@@ -45,6 +45,21 @@ namespace Utils
 		return CopyToNewString(Value.begin() + begin, Value.begin() + end);
 	}
 
+	template <typename F>
+	inline void StoiPassAllEceptionsWrapper(F func)
+	{
+		try
+		{
+			func();
+		}
+		catch (const std::invalid_argument&)
+		{
+		}
+		catch (const std::out_of_range&)
+		{
+		}
+	}
+
 #ifndef DISABLE_ICU
 	inline bool StringIsUpper(const std::string& Str)
 	{

@@ -165,7 +165,7 @@ namespace ASS {
 
 	private:
 		friend class AssScript;
-		void Read(std::istream& Stream);
+		boost::optional<std::string> Read(std::istream& Stream);
 		void Write(std::ostream& Stream) const;
 	};
 
@@ -184,7 +184,7 @@ namespace ASS {
 
 	private:
 		friend class AssScript;
-		void Read(std::istream& Stream);
+		boost::optional<std::string> Read(std::istream& Stream);
 		void Write(std::ostream& Stream) const;
 	};
 
@@ -209,7 +209,7 @@ namespace ASS {
 
 	private:
 		friend class AssScript;
-		void Read(std::istream& Stream);
+		boost::optional<std::string> Read(std::istream& Stream);
 		void Write(std::ostream& Stream) const;
 	};
 

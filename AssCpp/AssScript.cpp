@@ -10,56 +10,65 @@
 
 using namespace ASS;
 
-namespace AssScriptUtils
+namespace AssEnums
 {
-	// Прокрутить до первой не пустой строки
-	// TODO: optimize this
-	template <typename STREAM_T>
-	static boost::optional<std::string> ScrollToNonempty(STREAM_T& Stream)
+	boost::optional<AssEvent::AssEventType> ReadAssEventType(const std::string& Value)
 	{
-		std::string LineStr;
-		while (std::getline(Stream, LineStr))
-		{
-			boost::trim(LineStr);
-			if (!LineStr.empty())
-				return LineStr;
-		}
-		return {};
-	}
-	static bool IsSectionName(const std::string& Value)
-	{
-
-	}
-
-	template <typename STREAM_T>
-	static boost::optional<std::string> ParseScriptInfo(AssSectionScriptInfo& SI, STREAM_T& Stream)
-	{
-		// TODO: implement this
+		using AssEventType = AssEvent::AssEventType;
+		if (Value == "Dialogue")
+			return AssEventType::Dialogue;
+		else if (Value == "Comment")
+			return AssEventType::Comment;
+		else if (Value == "Picture")
+			return AssEventType::Picture;
+		else if (Value == "Sound")
+			return AssEventType::Sound;
+		else if (Value == "Movie")
+			return AssEventType::Movie;
+		else if (Value == "Command")
+			return AssEventType::Command;
 		return {};
 	}
 
-	template <typename STREAM_T>
-	static boost::optional<std::string> ParseV4Styles(AssSectionV4Styles& V4S, STREAM_T& Stream)
+	boost::optional<AssSectionScriptInfo::ScriptType> ReadScriptType(const std::string& Value)
 	{
-		// TODO: implement this
+		using ScriptType = AssSectionScriptInfo::ScriptType;
+		if (Value == "v4.00+")
+			return ScriptType::V400plus;
+		return { };
+	}
+
+	boost::optional<AssSectionScriptInfo::Collisions> ReadCollisions(const std::string& Value)
+	{
+		using Collisions = AssSectionScriptInfo::Collisions;
+		if (Value == "Normal")
+			return Collisions::Normal;
+		else if (Value == "Reverse")
+			return Collisions::Reverse;
 		return {};
 	}
 
-	template <typename STREAM_T>
-	static boost::optional<std::string> ParseEvents(AssSectionEvents& E, STREAM_T& Stream)
+	boost::optional<AssSectionScriptInfo::WrapStyle> ReadWrapStyle(const std::string& Value)
 	{
-		// TODO: implement this
+		using WrapStyle = AssSectionScriptInfo::WrapStyle;
+		if (Value == "0")
+			return WrapStyle::ZERO;
+		else if (Value == "1")
+			return WrapStyle::FIRST;
+		else if (Value == "2")
+			return WrapStyle::SECOND;
+		else if (Value == "3")
+			return WrapStyle::THIRD;
 		return {};
 	}
 
-	// TODO: тут нужна перегрузка оператора <<
 	static std::string PrintAssEventType(AssEvent::AssEventType Type)
 	{
 		using AssEventType = AssEvent::AssEventType;
 		switch (Type)
 		{
 		case AssEventType::Dialogue:
-				return "Dialogue";
+			return "Dialogue";
 		case AssEventType::Comment:
 			return "Comment";
 		case AssEventType::Picture:
@@ -122,6 +131,34 @@ namespace AssScriptUtils
 		assert(0);
 		return "";
 	}
+};
+
+namespace AssScriptUtils
+{
+	// Прокрутить до первой не пустой строки
+	// TODO: optimize this
+	template <typename STREAM_T>
+	static boost::optional<std::string> ScrollToNonempty(STREAM_T& Stream)
+	{
+		std::string LineStr;
+		while (std::getline(Stream, LineStr))
+		{
+			boost::trim(LineStr);
+			if (!LineStr.empty())
+				return LineStr;
+		}
+		return {};
+	}
+	static bool IsSectionName(const std::string& Value)
+	{
+		// TODO: implement this
+		return false;
+	}
+	static boost::optional<std::pair<std::string, std::string>> LineExtractKeyvalue(const std::string& LineStr)
+	{
+		// TODO: implement this
+		return {};
+	}
 
 };
 
@@ -137,7 +174,7 @@ namespace AssSerialize
 	template <typename STREAM_T>
 	void AssEventWrite(const AssEvent& E, STREAM_T& Stream)
 	{
-		Stream << AssScriptUtils::PrintAssEventType(E.Type)
+		Stream << AssEnums::PrintAssEventType(E.Type)
 			<< ": " << E.Layer
 			<< "," << E.Start.Print()
 			<< "," << E.End.Print()
@@ -151,14 +188,71 @@ namespace AssSerialize
 	}
 };
 
+boost::optional<std::string> AssSectionScriptInfo::Read(std::istream& Stream)
+{
+	boost::optional<std::string> ReturnValue;
+	AssSectionScriptInfo Temp;
+	std::string LineStr;
+	bool Initialized = false;
+	while (std::getline(Stream, LineStr))
+	{
+		boost::trim(LineStr); // На всякий случай
+		// Пустые строки нам не нужны
+		if (LineStr.empty())
+			continue;
+		// Другая секция.. Достаточно, заканчиваем
+		if (AssScriptUtils::IsSectionName(LineStr))
+		{
+			ReturnValue = LineStr;
+			break;
+		}
+
+		const auto& KV = AssScriptUtils::LineExtractKeyvalue(LineStr);
+		if (KV)
+		{
+			const auto& first = KV.get().first;
+			const auto& second = KV.get().second;
+			// Обрабатываем, если что-то получилось извлечь
+			// Все что странное будет игнорироваться(но ScriptType должен быть. И должен соответствовать поддерживаемой версии)
+			if (first == "ScriptType")
+			{
+				auto ScriptType = AssEnums::ReadScriptType(second);
+				if (ScriptType)
+				{
+					m_ScriptType = ScriptType.get();
+					Initialized = true;
+				}
+			}
+			else if (first == "Collisions")
+				Temp.m_Collisions = AssEnums::ReadCollisions(second);
+			else if (first == "PlayResX")
+				Utils::StoiPassAllEceptionsWrapper([&]() {Temp.m_PlayResX = std::stoi(second); });
+			else if (first == "PlayResY")
+				Utils::StoiPassAllEceptionsWrapper([&]() {Temp.m_PlayResY = std::stoi(second); });
+			else if (first == "PlayDepth")
+				Utils::StoiPassAllEceptionsWrapper([&]() {Temp.m_PlayDepth = std::stoi(second); });
+			else if (first == "Timer")
+				Utils::StoiPassAllEceptionsWrapper([&]() {Temp.m_Timer = std::stod(second); });
+			else if (first == "WrapStyle")
+				Temp.m_WrapStyle = AssEnums::ReadWrapStyle(second);
+		}
+	}
+
+	// Проверяем, перед тем как закончить..
+	if (!Initialized)
+		throw AssScriptInvalidScriptType();
+	std::swap(*this, Temp); // all right
+	return ReturnValue;
+}
+
 void AssSectionScriptInfo::Write(std::ostream& Stream) const
 {
 	assert(m_ScriptType != ScriptType::UNKNOWN); // not initialized
 
-	Stream << "ScriptType: " << AssScriptUtils::PrintScriptType(m_ScriptType) << std::endl;
+	Stream << "ScriptType: " << AssEnums::PrintScriptType(m_ScriptType) << std::endl;
 	// TODO: test output boost::optional
 	if (m_Collisions)
-		Stream << "Collisions: " << AssScriptUtils::PrintCollisions(m_Collisions.get()) << std::endl;
+		Stream << "Collisions: " << AssEnums::PrintCollisions(m_Collisions.get()) << std::endl;
 	if (m_PlayResX)
 		Stream << "PlayResX: " << m_PlayResX << std::endl;
 	if (m_PlayResY)
@@ -168,7 +262,7 @@ void AssSectionScriptInfo::Write(std::ostream& Stream) const
 	if (m_Timer)
 		Stream << "Timer: " << m_Timer << std::endl;
 	if (m_WrapStyle)
-		Stream << "WrapStyle: " << AssScriptUtils::PrintWrapStyle(m_WrapStyle.get()) << std::endl;
+		Stream << "WrapStyle: " << AssEnums::PrintWrapStyle(m_WrapStyle.get()) << std::endl;
 
 	if (!Title.empty())
 		Stream << "Title: " << Title << std::endl;
@@ -186,6 +280,12 @@ void AssSectionScriptInfo::Write(std::ostream& Stream) const
 		Stream << "ScriptUpdatedBy: " << ScriptUpdatedBy << std::endl;
 	if (!UpdateDetails.empty())
 		Stream << "UpdateDetails: " << UpdateDetails << std::endl;
+}
+
+boost::optional<std::string> AssSectionV4Styles::Read(std::istream& Stream)
+{
+
+	return {};
 }
 
 void AssSectionV4Styles::Write(std::ostream& Stream) const
@@ -220,6 +320,12 @@ void AssSectionV4Styles::Write(std::ostream& Stream) const
 		assert(Style.first == Style.second.Name);
 		AssSerialize::AssStyleWrite(Style.second, Stream);
 	}
+}
+
+boost::optional<std::string> AssSectionEvents::Read(std::istream& Stream)
+{
+	// TODO: implement this
+	return {};
 }
 
 void AssSectionEvents::Write(std::ostream& Stream) const
@@ -292,7 +398,7 @@ void AssScript::ParseTo(AssImpl& Impl, std::istream& Stream)
 	LineStr = AssScriptUtils::ScrollToNonempty(Stream);
 	if (!LineStr || LineStr.get() != SCRIPT_INFO_SECTION)
 		throw AssScriptCantFindScriptInfo();
-	LineStr = AssScriptUtils::ParseScriptInfo(Impl.ScriptInfo, Stream);
+	LineStr = Impl.ScriptInfo.Read(Stream);
 
 	// Проходим по остальным секциям
 	// Тут порядок не важен
@@ -300,10 +406,10 @@ void AssScript::ParseTo(AssImpl& Impl, std::istream& Stream)
 	while (LineStr)
 	{
 		if (LineStr.get() == V4PLUS_STYLES_SECTION)
-			LineStr = AssScriptUtils::ParseV4Styles(Impl.V4Styles, Stream);
+			LineStr = Impl.V4Styles.Read(Stream);
 		else if (LineStr.get() == EVENTS_SECTION)
 		{
-			LineStr = AssScriptUtils::ParseEvents(Impl.Events, Stream);
+			LineStr = Impl.Events.Read(Stream);
 		}
 	}
 }
