@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "AssScript.h"
 #include "EncodingUtils.h"
+#include "SubString.h"
 #include <fstream>
 #include <iostream>
 
@@ -358,7 +359,6 @@ static void ParseFormat(EventsFormatInfo& F, const std::string& Line)
 {
 	auto ParseToken = [&F, &Line](uint8_t ID, size_t B, size_t E)
 	{
-
 		auto SetFieldID = [](const char* Field, uint8_t& Value, uint8_t ID)
 		{
 			if (FORMAT_INVALID_ID != Value)
@@ -366,29 +366,29 @@ static void ParseFormat(EventsFormatInfo& F, const std::string& Line)
 			Value = ID;
 		};
 
-		// TODO: trim this string..
-		const char* Str = Line.c_str() + B;
-		const char* _StrEnd = Line.c_str() + E;
-		size_t Size = static_cast<size_t>(_StrEnd - Str);
-		if (Utils::StringCompare(Str, Size, FORMAT_LAYER, sizeof(FORMAT_LAYER) - 1))
+		SUBSTRING Str;
+		SUBSTRING_Init3(&Str, Line.c_str() + B, Line.c_str() + E);
+		SUBSTRING_Trim(&Str);
+
+		if (0 == SUBSTRING_CompareWitchConst(Str, FORMAT_LAYER))
 			SetFieldID(FORMAT_LAYER, F.Layer, ID);
-		else if (Utils::StringCompare(Str, Size, FORMAT_START, sizeof(FORMAT_START) - 1))
+		else if (0 == SUBSTRING_CompareWitchConst(Str, FORMAT_START))
 			SetFieldID(FORMAT_START, F.Start, ID);
-		else if (Utils::StringCompare(Str, Size, FORMAT_END, sizeof(FORMAT_END) - 1))
+		else if (0 == SUBSTRING_CompareWitchConst(Str, FORMAT_END))
 			SetFieldID(FORMAT_END, F.End, ID);
-		else if (Utils::StringCompare(Str, Size, FORMAT_STYLE, sizeof(FORMAT_STYLE) - 1))
+		else if (0 == SUBSTRING_CompareWitchConst(Str, FORMAT_STYLE))
 			SetFieldID(FORMAT_STYLE, F.Style, ID);
-		else if (Utils::StringCompare(Str, Size, FORMAT_NAME, sizeof(FORMAT_NAME) - 1))
+		else if (0 == SUBSTRING_CompareWitchConst(Str, FORMAT_NAME))
 			SetFieldID(FORMAT_NAME, F.Name, ID);
-		else if (Utils::StringCompare(Str, Size, FORMAT_MARGINL, sizeof(FORMAT_MARGINL) - 1))
+		else if (0 == SUBSTRING_CompareWitchConst(Str, FORMAT_MARGINL))
 			SetFieldID(FORMAT_MARGINL, F.MarginL, ID);
-		else if (Utils::StringCompare(Str, Size, FORMAT_MARGINR, sizeof(FORMAT_MARGINR) - 1))
+		else if (0 == SUBSTRING_CompareWitchConst(Str, FORMAT_MARGINR))
 			SetFieldID(FORMAT_MARGINR, F.MarginR, ID);
-		else if (Utils::StringCompare(Str, Size, FORMAT_MARGINV, sizeof(FORMAT_MARGINV) - 1))
+		else if (0 == SUBSTRING_CompareWitchConst(Str, FORMAT_MARGINV))
 			SetFieldID(FORMAT_MARGINV, F.MarginV, ID);
-		else if (Utils::StringCompare(Str, Size, FORMAT_EFFECT, sizeof(FORMAT_EFFECT) - 1))
+		else if (0 == SUBSTRING_CompareWitchConst(Str, FORMAT_EFFECT))
 			SetFieldID(FORMAT_EFFECT, F.Effect, ID);
-		else if (Utils::StringCompare(Str, Size, FORMAT_TEXT, sizeof(FORMAT_TEXT) - 1))
+		else if (0 == SUBSTRING_CompareWitchConst(Str, FORMAT_TEXT))
 			SetFieldID(FORMAT_TEXT, F.Text, ID);
 	};
 
@@ -433,18 +433,28 @@ boost::optional<std::string> AssSectionEvents::Read(std::istream& Stream)
 				if (!Format)
 					throw AssEventsFormatLineNotFound();
 				AssEvent NewEvent;
-
+				// TODO: implement this
 			}
 			else if (first == "Comment")
-
+			{
+				// TODO: implement this
+			}
 			else if (first == "Picture")
-
+			{
+				// TODO: implement this
+			}
 			else if (first == "Sound")
-
+			{
+				// TODO: implement this
+			}
 			else if (first == "Movie")
-
+			{
+				// TODO: implement this
+			}
 			else if (first == "Command")
-
+			{
+				// TODO: implement this
+			}
 
 		}
 	}

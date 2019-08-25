@@ -45,24 +45,6 @@ namespace Utils
 		return CopyToNewString(Value.begin() + begin, Value.begin() + end);
 	}
 
-	// Сравнение двух строк, не являющихся нуль-терминальными
-	// TODO: test it
-	template <typename C>
-	inline bool StringCompare(const C* Str1, size_t Size1, const C* Str2, size_t Size2)
-	{
-		if (Size1 != Size2)
-			return false;
-		const C* const EndStr1 = Str1 + Size1;
-		while (Str1 != EndStr1)
-		{
-			if (*Str1 != *Str2)
-				return false;
-			++Str1;
-			++Str2;
-		}
-		return true;
-	}
-
 	template <typename F>
 	inline void StoiPassAllEceptionsWrapper(F func)
 	{
