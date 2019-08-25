@@ -1,19 +1,21 @@
 #include "stdafx.h"
 #include "Parentheses.h"
 
+
 // Изменять содержимое StrInout разрешается только если НЕ установлен соответствующий флаг (P.ForbidModifyInoutString)
 template <typename IS_BEGIN_FUNC, typename IS_END_FUNC>
 static
 size_t
-ExtractString(
+ExtractStringInternal(
 	std::string& StrInout,
-	std::string* StrOut,
+	SUBSTRING* StrOut,
 	size_t Pos,
 	IS_BEGIN_FUNC IsBegin, IS_END_FUNC IsEnd,
 	Parentheses::Params P)
 {
 	std::string::iterator begin, end;
 	size_t begin_pos = Parentheses::NOT_FOUND;
+	size_t end_pos = Parentheses::NOT_FOUND;
 	bool has_Parentheses = false;
 	std::stack<char> PStack;
 
@@ -28,7 +30,7 @@ ExtractString(
 				if (Parentheses::NOT_FOUND == i)
 					return Parentheses::NOT_FOUND;	// paranoia??
 				begin = it;
-				begin_pos = i; // store for return value..
+				begin_pos = i;
 			}
 			PStack.push(*it);
 		}
@@ -37,6 +39,7 @@ ExtractString(
 			if (PStack.size() == 1)
 			{
 				end = it;
+				end_pos = i;
 				has_Parentheses = true;
 				break;
 			}
@@ -48,8 +51,9 @@ ExtractString(
 	if (has_Parentheses)
 	{
 		assert(Parentheses::NOT_FOUND != begin_pos);
+		// assert(Parentheses::NOT_FOUND != end_pos);
 		if (StrOut)
-			*StrOut = boost::trim_copy(Utils::CopyToNewString(begin + 1, end));
+			SUBSTRING_Init3(StrOut, StrInout.c_str() + begin_pos, StrInout.c_str() + end_pos);
 		if (!P.ForbidModifyInoutString)
 		{
 			StrInout.erase(begin, end + 1);
@@ -78,17 +82,32 @@ ExtractString(
 *******************************/
 size_t Parentheses::ExtractStringFromSquare(std::string& StrInout, std::string& StrOut, size_t Pos, Params P)
 {
-	return ExtractString(StrInout, &StrOut, Pos, SQUARE_BEGIN_PRED, SQUARE_END_PRED, P);
+	// TODO: test it
+	SUBSTRING SubstrOut;
+	size_t ReturnedPos = ExtractStringInternal(StrInout, &SubstrOut, Pos, SQUARE_BEGIN_PRED, SQUARE_END_PRED, P);
+	if (Parentheses::NOT_FOUND != ReturnedPos)
+		StrOut = Utils::CopyToNewString(SubstrOut);
+	return ReturnedPos;
 }
 
 size_t Parentheses::ExtractStringFromRound(std::string& StrInout, std::string& StrOut, size_t Pos, Params P)
 {
-	return ExtractString(StrInout, &StrOut, Pos, ROUND_BEGIN_PRED, ROUND_END_PRED, P);
+	// TODO: test it
+	SUBSTRING SubstrOut;
+	size_t ReturnedPos = ExtractStringInternal(StrInout, &SubstrOut, Pos, ROUND_BEGIN_PRED, ROUND_END_PRED, P);
+	if (Parentheses::NOT_FOUND != ReturnedPos)
+		StrOut = Utils::CopyToNewString(SubstrOut);
+	return ReturnedPos;
 }
 
 size_t Parentheses::ExtractStringFromBraces(std::string& StrInout, std::string& StrOut, size_t Pos, Params P)
 {
-	return ExtractString(StrInout, &StrOut, Pos, BRACES_BEGIN_PRED, BRACES_END_PRED, P);
+	// TODO: test it
+	SUBSTRING SubstrOut;
+	size_t ReturnedPos = ExtractStringInternal(StrInout, &SubstrOut, Pos, BRACES_BEGIN_PRED, BRACES_END_PRED, P);
+	if (Parentheses::NOT_FOUND != ReturnedPos)
+		StrOut = Utils::CopyToNewString(SubstrOut);
+	return ReturnedPos;
 }
 
 
@@ -98,17 +117,17 @@ size_t Parentheses::ExtractStringFromBraces(std::string& StrInout, std::string& 
 *******************************/
 size_t Parentheses::ExtractStringFromSquare(std::string& StrInout, size_t Pos, Params P)
 {
-	return ExtractString(StrInout, NULL, Pos, SQUARE_BEGIN_PRED, SQUARE_END_PRED, P);
+	return ExtractStringInternal(StrInout, NULL, Pos, SQUARE_BEGIN_PRED, SQUARE_END_PRED, P);
 }
 
 size_t Parentheses::ExtractStringFromRound(std::string& StrInout, size_t Pos, Params P)
 {
-	return ExtractString(StrInout, NULL, Pos, ROUND_BEGIN_PRED, ROUND_END_PRED, P);
+	return ExtractStringInternal(StrInout, NULL, Pos, ROUND_BEGIN_PRED, ROUND_END_PRED, P);
 }
 
 size_t Parentheses::ExtractStringFromBraces(std::string& StrInout, size_t Pos, Params P)
 {
-	return ExtractString(StrInout, NULL, Pos, BRACES_BEGIN_PRED, BRACES_END_PRED, P);
+	return ExtractStringInternal(StrInout, NULL, Pos, BRACES_BEGIN_PRED, BRACES_END_PRED, P);
 }
 
 
@@ -138,7 +157,12 @@ static bool AnyEndPred(char b, char c)
 *******************************/
 size_t Parentheses::ExtractStringFromAny(std::string& StrInout, std::string& StrOut, size_t Pos, Params P)
 {
-	return ExtractString(StrInout, &StrOut, Pos, AnyBeginPred, AnyEndPred, P);
+	// TODO: test it
+	SUBSTRING SubstrOut;
+	size_t ReturnedPos = ExtractStringInternal(StrInout, &SubstrOut, Pos, AnyBeginPred, AnyEndPred, P);
+	if (Parentheses::NOT_FOUND != ReturnedPos)
+		StrOut = Utils::CopyToNewString(SubstrOut);
+	return ReturnedPos;
 }
 
 /******************************
@@ -146,8 +170,32 @@ size_t Parentheses::ExtractStringFromAny(std::string& StrInout, std::string& Str
 *******************************/
 size_t Parentheses::ExtractStringFromAny(std::string& StrInout, size_t Pos, Params P)
 {
-	return ExtractString(StrInout, NULL, Pos, AnyBeginPred, AnyEndPred, P);
+	return ExtractStringInternal(StrInout, NULL, Pos, AnyBeginPred, AnyEndPred, P);
 }
 
 
+/******************************
+* ConstantExtractStringFromSquare(very lightweight version)
+* without copying and memory allocation
+*******************************/
+size_t Parentheses::ConstantExtractStringFromSquare(const std::string& StrIn, SUBSTRING& StrOut, size_t Pos, Params P)
+{
+	P.ForbidModifyInoutString = true;
+	return ExtractStringInternal(const_cast<std::string&>(StrIn), &StrOut, Pos, SQUARE_BEGIN_PRED, SQUARE_END_PRED, P);
+}
+size_t Parentheses::ConstantExtractStringFromRound(const std::string& StrIn, SUBSTRING& StrOut, size_t Pos, Params P)
+{
+	P.ForbidModifyInoutString = true;
+	return ExtractStringInternal(const_cast<std::string&>(StrIn), &StrOut, Pos, ROUND_BEGIN_PRED, ROUND_END_PRED, P);
+}
+size_t Parentheses::ConstantExtractStringFromBraces(const std::string& StrIn, SUBSTRING& StrOut, size_t Pos, Params P)
+{
+	P.ForbidModifyInoutString = true;
+	return ExtractStringInternal(const_cast<std::string&>(StrIn), &StrOut, Pos, BRACES_BEGIN_PRED, BRACES_END_PRED, P);
+}
+size_t Parentheses::ConstantExtractStringFromAny(const std::string& StrIn, SUBSTRING& StrOut, size_t Pos, Params P)
+{
+	P.ForbidModifyInoutString = true;
+	return ExtractStringInternal(const_cast<std::string&>(StrIn), &StrOut, Pos, AnyBeginPred, AnyEndPred, P);
+}
 

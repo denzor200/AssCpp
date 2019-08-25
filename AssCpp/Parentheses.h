@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SubString.h"
+
 namespace Parentheses
 {
 	struct Limits
@@ -38,6 +40,11 @@ namespace Parentheses
 	size_t ConstantExtractStringFromRound(const std::string& StrIn, std::string& StrOut, size_t Pos = 0, Params P = Params());
 	size_t ConstantExtractStringFromBraces(const std::string& StrIn, std::string& StrOut, size_t Pos = 0, Params P = Params());
 	size_t ConstantExtractStringFromAny(const std::string& StrIn, std::string& StrOut, size_t Pos = 0, Params P = Params());
+
+	size_t ConstantExtractStringFromSquare(const std::string& StrIn, SUBSTRING& StrOut, size_t Pos = 0, Params P = Params());
+	size_t ConstantExtractStringFromRound(const std::string& StrIn, SUBSTRING& StrOut, size_t Pos = 0, Params P = Params());
+	size_t ConstantExtractStringFromBraces(const std::string& StrIn, SUBSTRING& StrOut, size_t Pos = 0, Params P = Params());
+	size_t ConstantExtractStringFromAny(const std::string& StrIn, SUBSTRING& StrOut, size_t Pos = 0, Params P = Params());
 
 };
 

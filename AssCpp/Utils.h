@@ -6,6 +6,8 @@
 #include <unicode/unistr.h>
 #endif // DISABLE_ICU
 
+#include "SubString.h"
+
 namespace Utils
 {
 
@@ -29,7 +31,8 @@ namespace Utils
 		}
 	}
 
-	inline std::string CopyToNewString(std::string::const_iterator begin, std::string::const_iterator end)
+	template <typename IT_T>
+	inline std::string CopyToNewString(IT_T begin, IT_T end)
 	{
 		assert(end >= begin);
 
@@ -43,6 +46,11 @@ namespace Utils
 	{
 		assert(end >= begin);
 		return CopyToNewString(Value.begin() + begin, Value.begin() + end);
+	}
+
+	inline std::string CopyToNewString(SUBSTRING S)
+	{
+		return CopyToNewString(S.Value, S.Value + S.Size);
 	}
 
 	template <typename F>
