@@ -188,10 +188,10 @@ namespace AssSerialize
 	}
 };
 
+// Отсутствуют гарантии безопасности исключений(они здесь и не нужны)
 boost::optional<std::string> AssSectionScriptInfo::Read(std::istream& Stream)
 {
 	boost::optional<std::string> ReturnValue;
-	AssSectionScriptInfo Temp;
 	std::string LineStr;
 	bool Initialized = false;
 	while (std::getline(Stream, LineStr))
@@ -224,24 +224,24 @@ boost::optional<std::string> AssSectionScriptInfo::Read(std::istream& Stream)
 				}
 			}
 			else if (first == "Collisions")
-				Temp.m_Collisions = AssEnums::ReadCollisions(second);
+				m_Collisions = AssEnums::ReadCollisions(second);
 			else if (first == "PlayResX")
-				Utils::StoiPassAllEceptionsWrapper([&]() {Temp.m_PlayResX = std::stoi(second); });
+				Utils::StoiPassAllEceptionsWrapper([&]() {m_PlayResX = std::stoi(second); });
 			else if (first == "PlayResY")
-				Utils::StoiPassAllEceptionsWrapper([&]() {Temp.m_PlayResY = std::stoi(second); });
+				Utils::StoiPassAllEceptionsWrapper([&]() {m_PlayResY = std::stoi(second); });
 			else if (first == "PlayDepth")
-				Utils::StoiPassAllEceptionsWrapper([&]() {Temp.m_PlayDepth = std::stoi(second); });
+				Utils::StoiPassAllEceptionsWrapper([&]() {m_PlayDepth = std::stoi(second); });
 			else if (first == "Timer")
-				Utils::StoiPassAllEceptionsWrapper([&]() {Temp.m_Timer = std::stod(second); });
+				Utils::StoiPassAllEceptionsWrapper([&]() {m_Timer = std::stod(second); });
 			else if (first == "WrapStyle")
-				Temp.m_WrapStyle = AssEnums::ReadWrapStyle(second);
+				m_WrapStyle = AssEnums::ReadWrapStyle(second);
 		}
 	}
 
 	// Проверяем, перед тем как закончить..
 	if (!Initialized)
 		throw AssScriptInvalidScriptType();
-	std::swap(*this, Temp); // all right
+	// all right
 	return ReturnValue;
 }
 
@@ -282,9 +282,10 @@ void AssSectionScriptInfo::Write(std::ostream& Stream) const
 		Stream << "UpdateDetails: " << UpdateDetails << std::endl;
 }
 
+// Отсутствуют гарантии безопасности исключений(они здесь и не нужны)
 boost::optional<std::string> AssSectionV4Styles::Read(std::istream& Stream)
 {
-
+	// TODO: implement this
 	return {};
 }
 
@@ -322,9 +323,131 @@ void AssSectionV4Styles::Write(std::ostream& Stream) const
 	}
 }
 
+#define FORMAT_INVALID_ID ((uint8_t)-1)
+
+struct EventsFormatInfo
+{
+	uint8_t Layer = FORMAT_INVALID_ID;
+	uint8_t Start = FORMAT_INVALID_ID;
+	uint8_t End = FORMAT_INVALID_ID;
+	uint8_t Style = FORMAT_INVALID_ID;
+	uint8_t Name = FORMAT_INVALID_ID;
+	uint8_t MarginL = FORMAT_INVALID_ID;
+	uint8_t MarginR = FORMAT_INVALID_ID;
+	uint8_t MarginV = FORMAT_INVALID_ID;
+	uint8_t Effect = FORMAT_INVALID_ID;
+	uint8_t Text = FORMAT_INVALID_ID; // Всегда должен быть последним
+
+	EventsFormatInfo() = default;
+};
+
+#define FORMAT_LAYER "Layer"
+#define FORMAT_START "Start"
+#define FORMAT_END "End"
+#define FORMAT_STYLE "Style"
+#define FORMAT_NAME "Name"
+#define FORMAT_MARGINL "MarginL"
+#define FORMAT_MARGINR "MarginR"
+#define FORMAT_MARGINV "MarginV"
+#define FORMAT_EFFECT "Effect"
+#define FORMAT_TEXT "Text"
+
+// TODO: реализовать возможность задавать имена для 'Format' из вне
+// Это важно для Biff
+static void ParseFormat(EventsFormatInfo& F, const std::string& Line)
+{
+	auto ParseToken = [&F, &Line](uint8_t ID, size_t B, size_t E)
+	{
+
+		auto SetFieldID = [](const char* Field, uint8_t& Value, uint8_t ID)
+		{
+			if (FORMAT_INVALID_ID != Value)
+				throw AssEventsFieldIdAlreadyDefined(Field);
+			Value = ID;
+		};
+
+		// TODO: trim this string..
+		const char* Str = Line.c_str() + B;
+		const char* _StrEnd = Line.c_str() + E;
+		size_t Size = static_cast<size_t>(_StrEnd - Str);
+		if (Utils::StringCompare(Str, Size, FORMAT_LAYER, sizeof(FORMAT_LAYER) - 1))
+			SetFieldID(FORMAT_LAYER, F.Layer, ID);
+		else if (Utils::StringCompare(Str, Size, FORMAT_START, sizeof(FORMAT_START) - 1))
+			SetFieldID(FORMAT_START, F.Start, ID);
+		else if (Utils::StringCompare(Str, Size, FORMAT_END, sizeof(FORMAT_END) - 1))
+			SetFieldID(FORMAT_END, F.End, ID);
+		else if (Utils::StringCompare(Str, Size, FORMAT_STYLE, sizeof(FORMAT_STYLE) - 1))
+			SetFieldID(FORMAT_STYLE, F.Style, ID);
+		else if (Utils::StringCompare(Str, Size, FORMAT_NAME, sizeof(FORMAT_NAME) - 1))
+			SetFieldID(FORMAT_NAME, F.Name, ID);
+		else if (Utils::StringCompare(Str, Size, FORMAT_MARGINL, sizeof(FORMAT_MARGINL) - 1))
+			SetFieldID(FORMAT_MARGINL, F.MarginL, ID);
+		else if (Utils::StringCompare(Str, Size, FORMAT_MARGINR, sizeof(FORMAT_MARGINR) - 1))
+			SetFieldID(FORMAT_MARGINR, F.MarginR, ID);
+		else if (Utils::StringCompare(Str, Size, FORMAT_MARGINV, sizeof(FORMAT_MARGINV) - 1))
+			SetFieldID(FORMAT_MARGINV, F.MarginV, ID);
+		else if (Utils::StringCompare(Str, Size, FORMAT_EFFECT, sizeof(FORMAT_EFFECT) - 1))
+			SetFieldID(FORMAT_EFFECT, F.Effect, ID);
+		else if (Utils::StringCompare(Str, Size, FORMAT_TEXT, sizeof(FORMAT_TEXT) - 1))
+			SetFieldID(FORMAT_TEXT, F.Text, ID);
+	};
+
+	size_t BPos = 0;
+	uint8_t ID = 0;
+	for (size_t EPos = Line.find(','); std::string::npos != EPos; EPos = Line.find(',', EPos))
+	{
+		ParseToken(ID, BPos, EPos);
+		BPos = EPos + 1;
+		ID++;
+	}
+	ParseToken(ID, BPos, Line.size());
+}
+
+static void ParseDialogue(AssEvent& E, const EventsFormatInfo& F, const std::string& Line)
+{
+	
+}
+
+// Отсутствуют гарантии безопасности исключений(они здесь и не нужны)
 boost::optional<std::string> AssSectionEvents::Read(std::istream& Stream)
 {
-	// TODO: implement this
+	boost::optional<EventsFormatInfo> Format;
+	std::string LineStr;
+	while (std::getline(Stream, LineStr))
+	{
+		boost::trim(LineStr); // На всякий случай
+		if (AssScriptUtils::IsSectionName(LineStr))
+			return LineStr;
+		const auto& KV = AssScriptUtils::LineExtractKeyvalue(LineStr);
+		if (KV)
+		{
+			const auto& first = KV.get().first;
+			const auto& second = KV.get().second;
+			if (first == "Format")
+			{
+				Format = EventsFormatInfo();
+				ParseFormat(Format.get(), second);
+			}
+			else if (first == "Dialogue")
+			{
+				if (!Format)
+					throw AssEventsFormatLineNotFound();
+				AssEvent NewEvent;
+
+			}
+			else if (first == "Comment")
+
+			else if (first == "Picture")
+
+			else if (first == "Sound")
+
+			else if (first == "Movie")
+
+			else if (first == "Command")
+
+
+		}
+	}
 	return {};
 }
 

@@ -48,6 +48,35 @@ namespace ASS
 		}
 	};
 
+	/*******************************
+	* Events
+	********************************/
+	class AssEventsInvalidTextFieldId : public AssException
+	{
+	public:
+		AssEventsInvalidTextFieldId() noexcept :
+			AssException("Identifier of 'Text' field in 'Events' section must be only 9")
+		{
+		}
+	};
+	class AssEventsFieldIdAlreadyDefined : public AssException
+	{
+	public:
+		// TODO: make error message text
+		AssEventsFieldIdAlreadyDefined(const char* Field) noexcept :
+			AssException("")
+		{
+		}
+	};
+	class AssEventsFormatLineNotFound : public AssException
+	{
+	public:
+		// TODO: make error message text
+		AssEventsFormatLineNotFound() noexcept :
+			AssException("")
+		{
+		}
+	};
 
 	/*******************************
 	* Timing
