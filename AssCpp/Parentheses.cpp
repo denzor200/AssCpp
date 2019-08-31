@@ -8,7 +8,8 @@ static
 size_t
 ExtractStringInternal(
 	std::string& StrInout,
-	SUBSTRING* StrOut,
+	void* StrOut,
+	int StrOutType,
 	size_t Pos,
 	IS_BEGIN_FUNC IsBegin, IS_END_FUNC IsEnd,
 	Parentheses::Params P)
@@ -52,8 +53,20 @@ ExtractStringInternal(
 	{
 		assert(Parentheses::NOT_FOUND != begin_pos);
 		// assert(Parentheses::NOT_FOUND != end_pos);
-		if (StrOut)
-			SUBSTRING_Init3(StrOut, StrInout.c_str() + begin_pos, StrInout.c_str() + end_pos);
+		switch (StrOutType)
+		{
+		case 0:
+			assert(StrOut);
+			SUBSTRING_Init3(reinterpret_cast<SUBSTRING*>(StrOut),
+				StrInout.c_str() + begin_pos, StrInout.c_str() + end_pos);
+			SUBSTRING_Trim(reinterpret_cast<SUBSTRING*>(StrOut));
+			break;
+		case 1:
+			assert(StrOut);
+			*reinterpret_cast<std::string*>(StrOut) 
+				= boost::trim_copy(Utils::CopyToNewString(begin + 1, end));
+			break;
+		}
 		if (!P.ForbidModifyInoutString)
 		{
 			StrInout.erase(begin, end + 1);
@@ -82,32 +95,20 @@ ExtractStringInternal(
 *******************************/
 size_t Parentheses::ExtractStringFromSquare(std::string& StrInout, std::string& StrOut, size_t Pos, Params P)
 {
-	// TODO: test it
-	SUBSTRING SubstrOut;
-	size_t ReturnedPos = ExtractStringInternal(StrInout, &SubstrOut, Pos, SQUARE_BEGIN_PRED, SQUARE_END_PRED, P);
-	if (Parentheses::NOT_FOUND != ReturnedPos)
-		StrOut = Utils::CopyToNewString(SubstrOut);
-	return ReturnedPos;
+	return ExtractStringInternal(StrInout, 
+		reinterpret_cast<void*>(&StrOut), 1, Pos, SQUARE_BEGIN_PRED, SQUARE_END_PRED, P);
 }
 
 size_t Parentheses::ExtractStringFromRound(std::string& StrInout, std::string& StrOut, size_t Pos, Params P)
 {
-	// TODO: test it
-	SUBSTRING SubstrOut;
-	size_t ReturnedPos = ExtractStringInternal(StrInout, &SubstrOut, Pos, ROUND_BEGIN_PRED, ROUND_END_PRED, P);
-	if (Parentheses::NOT_FOUND != ReturnedPos)
-		StrOut = Utils::CopyToNewString(SubstrOut);
-	return ReturnedPos;
+	return ExtractStringInternal(StrInout, 
+		reinterpret_cast<void*>(&StrOut), 1, Pos, ROUND_BEGIN_PRED, ROUND_END_PRED, P);
 }
 
 size_t Parentheses::ExtractStringFromBraces(std::string& StrInout, std::string& StrOut, size_t Pos, Params P)
 {
-	// TODO: test it
-	SUBSTRING SubstrOut;
-	size_t ReturnedPos = ExtractStringInternal(StrInout, &SubstrOut, Pos, BRACES_BEGIN_PRED, BRACES_END_PRED, P);
-	if (Parentheses::NOT_FOUND != ReturnedPos)
-		StrOut = Utils::CopyToNewString(SubstrOut);
-	return ReturnedPos;
+	return ExtractStringInternal(StrInout, 
+		reinterpret_cast<void*>(&StrOut), 1, Pos, BRACES_BEGIN_PRED, BRACES_END_PRED, P);
 }
 
 
@@ -117,17 +118,17 @@ size_t Parentheses::ExtractStringFromBraces(std::string& StrInout, std::string& 
 *******************************/
 size_t Parentheses::ExtractStringFromSquare(std::string& StrInout, size_t Pos, Params P)
 {
-	return ExtractStringInternal(StrInout, NULL, Pos, SQUARE_BEGIN_PRED, SQUARE_END_PRED, P);
+	return ExtractStringInternal(StrInout, NULL, -1, Pos, SQUARE_BEGIN_PRED, SQUARE_END_PRED, P);
 }
 
 size_t Parentheses::ExtractStringFromRound(std::string& StrInout, size_t Pos, Params P)
 {
-	return ExtractStringInternal(StrInout, NULL, Pos, ROUND_BEGIN_PRED, ROUND_END_PRED, P);
+	return ExtractStringInternal(StrInout, NULL, -1, Pos, ROUND_BEGIN_PRED, ROUND_END_PRED, P);
 }
 
 size_t Parentheses::ExtractStringFromBraces(std::string& StrInout, size_t Pos, Params P)
 {
-	return ExtractStringInternal(StrInout, NULL, Pos, BRACES_BEGIN_PRED, BRACES_END_PRED, P);
+	return ExtractStringInternal(StrInout, NULL, -1, Pos, BRACES_BEGIN_PRED, BRACES_END_PRED, P);
 }
 
 
@@ -157,12 +158,7 @@ static bool AnyEndPred(char b, char c)
 *******************************/
 size_t Parentheses::ExtractStringFromAny(std::string& StrInout, std::string& StrOut, size_t Pos, Params P)
 {
-	// TODO: test it
-	SUBSTRING SubstrOut;
-	size_t ReturnedPos = ExtractStringInternal(StrInout, &SubstrOut, Pos, AnyBeginPred, AnyEndPred, P);
-	if (Parentheses::NOT_FOUND != ReturnedPos)
-		StrOut = Utils::CopyToNewString(SubstrOut);
-	return ReturnedPos;
+	return ExtractStringInternal(StrInout, &StrOut, 1, Pos, AnyBeginPred, AnyEndPred, P);
 }
 
 /******************************
@@ -170,7 +166,7 @@ size_t Parentheses::ExtractStringFromAny(std::string& StrInout, std::string& Str
 *******************************/
 size_t Parentheses::ExtractStringFromAny(std::string& StrInout, size_t Pos, Params P)
 {
-	return ExtractStringInternal(StrInout, NULL, Pos, AnyBeginPred, AnyEndPred, P);
+	return ExtractStringInternal(StrInout, NULL, -1, Pos, AnyBeginPred, AnyEndPred, P);
 }
 
 
@@ -181,21 +177,25 @@ size_t Parentheses::ExtractStringFromAny(std::string& StrInout, size_t Pos, Para
 size_t Parentheses::ConstantExtractStringFromSquare(const std::string& StrIn, SUBSTRING& StrOut, size_t Pos, Params P)
 {
 	P.ForbidModifyInoutString = true;
-	return ExtractStringInternal(const_cast<std::string&>(StrIn), &StrOut, Pos, SQUARE_BEGIN_PRED, SQUARE_END_PRED, P);
+	return ExtractStringInternal(const_cast<std::string&>(StrIn), 
+		&StrOut, 0, Pos, SQUARE_BEGIN_PRED, SQUARE_END_PRED, P);
 }
 size_t Parentheses::ConstantExtractStringFromRound(const std::string& StrIn, SUBSTRING& StrOut, size_t Pos, Params P)
 {
 	P.ForbidModifyInoutString = true;
-	return ExtractStringInternal(const_cast<std::string&>(StrIn), &StrOut, Pos, ROUND_BEGIN_PRED, ROUND_END_PRED, P);
+	return ExtractStringInternal(const_cast<std::string&>(StrIn), 
+		&StrOut, 0, Pos, ROUND_BEGIN_PRED, ROUND_END_PRED, P);
 }
 size_t Parentheses::ConstantExtractStringFromBraces(const std::string& StrIn, SUBSTRING& StrOut, size_t Pos, Params P)
 {
 	P.ForbidModifyInoutString = true;
-	return ExtractStringInternal(const_cast<std::string&>(StrIn), &StrOut, Pos, BRACES_BEGIN_PRED, BRACES_END_PRED, P);
+	return ExtractStringInternal(const_cast<std::string&>(StrIn), 
+		&StrOut, 0, Pos, BRACES_BEGIN_PRED, BRACES_END_PRED, P);
 }
 size_t Parentheses::ConstantExtractStringFromAny(const std::string& StrIn, SUBSTRING& StrOut, size_t Pos, Params P)
 {
 	P.ForbidModifyInoutString = true;
-	return ExtractStringInternal(const_cast<std::string&>(StrIn), &StrOut, Pos, AnyBeginPred, AnyEndPred, P);
+	return ExtractStringInternal(const_cast<std::string&>(StrIn), 
+		&StrOut, 0, Pos, AnyBeginPred, AnyEndPred, P);
 }
 
